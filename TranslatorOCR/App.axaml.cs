@@ -4,8 +4,9 @@ using Avalonia.Markup.Xaml;
 
 namespace TranslatorOCR
 {
-    public partial class App : Application
+    public partial class App : Avalonia.Application
     {
+        public static System.IServiceProvider? Services { get; set; }
         public override void Initialize()
         {
             AvaloniaXamlLoader.Load(this);
