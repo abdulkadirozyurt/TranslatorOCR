@@ -33,6 +33,16 @@ public class AppController
         if (region is null) throw new ArgumentNullException(nameof(region));
         if (string.IsNullOrWhiteSpace(targetLanguage)) targetLanguage = "en";
 
+        // Temporarily hide overlay to avoid capturing it
+        try
+        {
+            await _overlay.TempHideAsync(cancellationToken).ConfigureAwait(false);
+        }
+        catch
+        {
+            // ignore overlay temp-hide errors
+        }
+
         var bytes = await _capture.CaptureRegionAsync(region, cancellationToken).ConfigureAwait(false);
         if (bytes == null || bytes.Length == 0)
         {
@@ -50,7 +60,15 @@ public class AppController
         var translated = await _translator.TranslateAsync(text, targetLanguage, cancellationToken).ConfigureAwait(false);
         if (string.IsNullOrWhiteSpace(translated)) translated = text;
 
-        await _overlay.ShowTextAsync(translated, cancellationToken).ConfigureAwait(false);
+        try
+        {
+            await _overlay.ShowTextAsync(translated, cancellationToken).ConfigureAwait(false);
+        }
+        finally
+        {
+            // restore overlay visibility if it was temporarily hidden
+            try { await _overlay.TempShowAsync(cancellationToken).ConfigureAwait(false); } catch { }
+        }
         return true;
     }
 

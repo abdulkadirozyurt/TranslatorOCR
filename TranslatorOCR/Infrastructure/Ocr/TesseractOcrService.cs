@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -21,21 +22,138 @@ public class TesseractOcrService : IOcrService, IDisposable
     private readonly string _language;
     private TesseractEngine? _engine;
 
+    /// <summary>
+    /// Common 2-letter to Tesseract 3-letter language code mapping.
+    /// </summary>
+    private static readonly Dictionary<string, string> LanguageCodeMap = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["en"] = "eng",
+        ["de"] = "deu",
+        ["fr"] = "fra",
+        ["es"] = "spa",
+        ["it"] = "ita",
+        ["pt"] = "por",
+        ["ru"] = "rus",
+        ["zh"] = "chi_sim",
+        ["ja"] = "jpn",
+        ["ko"] = "kor",
+        ["ar"] = "ara",
+        ["tr"] = "tur",
+        ["pl"] = "pol",
+        ["nl"] = "nld",
+        ["sv"] = "swe",
+        ["da"] = "dan",
+        ["fi"] = "fin",
+        ["no"] = "nor",
+        ["cs"] = "ces",
+        ["el"] = "ell",
+        ["he"] = "heb",
+        ["hi"] = "hin",
+        ["hu"] = "hun",
+        ["id"] = "ind",
+        ["th"] = "tha",
+        ["uk"] = "ukr",
+        ["vi"] = "vie",
+    };
+
     public TesseractOcrService(TranslatorOCR.Services.ISettingsService settings)
     {
-        _language = settings?.OcrLanguage ?? "eng";
-        _tessDataPath = settings?.TessdataPath
-                        ?? Environment.GetEnvironmentVariable("TESSDATA_PREFIX")
-                        ?? Path.Combine(AppContext.BaseDirectory, "tessdata");
+        var rawLang = settings?.OcrLanguage ?? "eng";
+        _language = NormalizeLanguageCode(rawLang);
+        
+        var configured = settings?.TessdataPath;
+        var env = Environment.GetEnvironmentVariable("TESSDATA_PREFIX");
+        var defaultPath = Path.Combine(AppContext.BaseDirectory, "tessdata");
+
+        if (!string.IsNullOrWhiteSpace(configured))
+            _tessDataPath = configured!;
+        else if (!string.IsNullOrWhiteSpace(env))
+            _tessDataPath = env!;
+        else
+            _tessDataPath = FindTessdataFolder() ?? defaultPath;
+    }
+
+    /// <summary>
+    /// Normalizes language codes to Tesseract 3-letter format.
+    /// </summary>
+    private static string NormalizeLanguageCode(string code)
+    {
+        if (string.IsNullOrWhiteSpace(code))
+            return "eng";
+        
+        code = code.Trim();
+        
+        // If it's a 2-letter code, map it to 3-letter
+        if (LanguageCodeMap.TryGetValue(code, out var tessCode))
+            return tessCode;
+        
+        // Already a 3-letter code or unknown, return as-is
+        return code;
     }
 
     private void EnsureEngine()
     {
         if (_engine != null) return;
         if (!Directory.Exists(_tessDataPath))
-            throw new DirectoryNotFoundException($"tessdata not found at '{_tessDataPath}'. Set TESSDATA_PREFIX or place tessdata there.");
+        {
+            var attempted = new[]
+            {
+                _tessDataPath,
+                Path.Combine(AppContext.BaseDirectory, "tessdata"),
+                Environment.GetEnvironmentVariable("TESSDATA_PREFIX") ?? string.Empty
+            };
 
-        _engine = new TesseractEngine(_tessDataPath, _language, EngineMode.Default);
+            throw new DirectoryNotFoundException($"tessdata not found. Attempted: '{string.Join("', '", attempted)}'. Set TESSDATA_PREFIX, set `TessdataPath` in settings, or place a `tessdata` folder in the application directory.");
+        }
+
+        try
+        {
+            _engine = new TesseractEngine(_tessDataPath, _language, EngineMode.Default);
+        }
+        catch (Tesseract.TesseractException tex)
+        {
+            // Collect diagnostics to help the user fix common issues
+            string[] trainedFiles = Array.Empty<string>();
+            try { trainedFiles = Directory.GetFiles(_tessDataPath, "*.traineddata"); } catch { }
+
+            bool languageFilePresent = false;
+            try { languageFilePresent = File.Exists(Path.Combine(_tessDataPath, _language + ".traineddata")); } catch { }
+
+            string[] dlls = Array.Empty<string>();
+            try { dlls = Directory.GetFiles(AppContext.BaseDirectory, "*.dll"); } catch { }
+
+            var env = Environment.GetEnvironmentVariable("TESSDATA_PREFIX") ?? string.Empty;
+
+            var details = $"Tesseract initialization failed: {tex.Message}\n" +
+                          $"tessdata path: '{_tessDataPath}'\n" +
+                          $"TESSDATA_PREFIX: '{env}'\n" +
+                          $"Language requested: '{_language}' (traineddata present: {languageFilePresent})\n" +
+                          $"Traineddata files (sample): {string.Join(", ", trainedFiles.Length > 0 ? trainedFiles[..Math.Min(10, trainedFiles.Length)] : new string[]{"(none)"})}\n" +
+                          $"DLLs in app folder (sample): {string.Join(", ", dlls.Length > 0 ? dlls[..Math.Min(10, dlls.Length)] : new string[]{"(none)"})}\n" +
+                          "Common fixes: ensure the tessdata folder contains the language .traineddata files, confirm native tesseract/leptonica DLLs are available for the app's bitness, and install the Visual C++ Redistributable. See https://github.com/charlesw/tesseract/wiki/Error-1 for details.";
+
+            throw new InvalidOperationException(details, tex);
+        }
+    }
+
+    private static string? FindTessdataFolder()
+    {
+        try
+        {
+            var dir = new DirectoryInfo(AppContext.BaseDirectory);
+            while (dir != null)
+            {
+                var candidate = Path.Combine(dir.FullName, "tessdata");
+                if (Directory.Exists(candidate)) return candidate;
+                dir = dir.Parent;
+            }
+        }
+        catch
+        {
+            // ignore and fallback to defaults
+        }
+
+        return null;
     }
 
     public Task<string?> ReadTextAsync(byte[] imageBytes, CancellationToken cancellationToken)

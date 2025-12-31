@@ -2,44 +2,64 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="520"
         x:Class="TranslatorOCR.MainWindow"
-        Title="TranslatorOCR">
-    <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,*" ColumnDefinitions="Auto,*">
-        <TextBlock Grid.ColumnSpan="2" Margin="12" FontSize="18" Text="TranslatorOCR - Game Subtitle Translator"/>
+        Title="🎮 Oyun Çevirici v7">
 
-        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="12" Spacing="8">
-            <Button x:Name="SelectRegionButton" Content="Select Region" Width="120"/>
-            <Button x:Name="StartStopButton" Content="Start" Width="100"/>
-            <TextBlock VerticalAlignment="Center" Margin="8,0,0,0">Interval (s):</TextBlock>
-            <TextBox x:Name="IntervalBox" Width="60" Text="0.5"/>
-            <TextBlock VerticalAlignment="Center" Margin="8,0,0,0">Lang:</TextBlock>
-            <ComboBox x:Name="LangCombo" Width="80" SelectedIndex="0">
-                <ComboBoxItem Content="en"/>
-                <ComboBoxItem Content="tr"/>
-            </ComboBox>
+    <Grid Background="#0d1117" Margin="0">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Orientation="Vertical" Margin="16">
+            <TextBlock Text="🎮 Oyun Çevirici v7" FontSize="20" FontWeight="Bold" Foreground="#58a6ff" />
+            <TextBlock x:Name="OcrStatusLabel" Text="⏳ OCR yükleniyor..." FontSize="12" Foreground="#d29922" Margin="0,4,0,0"/>
         </StackPanel>
 
-        <!-- Tessdata settings -->
-        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="12" Spacing="8">
-            <TextBlock VerticalAlignment="Center">Tessdata:</TextBlock>
-            <TextBox x:Name="TessdataBox" Width="340"/>
-            <Button x:Name="BrowseTessdataButton" Content="Browse" Width="80"/>
-            <Button x:Name="SaveSettingsButton" Content="Save" Width="80"/>
-        </StackPanel>
+        <Border Grid.Row="1" Background="#161b22" CornerRadius="8" Margin="12" Padding="12">
+            <StackPanel Orientation="Vertical" Spacing="8">
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                    <TextBlock x:Name="RegionLabel" Text="📍 Bölge seçilmedi" Foreground="#f85149" VerticalAlignment="Center"/>
+                </StackPanel>
 
-        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="12">
-            <TextBlock Text="Region:" FontWeight="Bold"/>
-            <TextBlock x:Name="RegionLabel" Margin="8,0,0,0">Not selected</TextBlock>
-        </StackPanel>
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <Button x:Name="SelectRegionButton" Content="📍 Bölge Seç [F1]" Width="160" Background="#238636" Foreground="White"/>
+                    <Button x:Name="StartStopButton" Content="▶ Başlat [F2]" Width="140" Background="#1f6feb" Foreground="White"/>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="8,0,0,0" Spacing="6">
+                        <TextBlock Text="Tarama:" Foreground="#8b949e" VerticalAlignment="Center"/>
+                        <TextBox x:Name="IntervalBox" Width="60" Text="0.5"/>
+                        <TextBlock Text="sn" Foreground="#8b949e" VerticalAlignment="Center"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="8,0,0,0" Spacing="6">
+                        <TextBlock Text="Lang:" Foreground="#8b949e" VerticalAlignment="Center"/>
+                        <ComboBox x:Name="LangCombo" Width="80" SelectedIndex="0">
+                            <ComboBoxItem Content="en"/>
+                            <ComboBoxItem Content="tr"/>
+                        </ComboBox>
+                    </StackPanel>
+                </StackPanel>
 
-        <StackPanel Grid.Row="3" Orientation="Horizontal" Margin="12">
-            <TextBlock Text="Status:" FontWeight="Bold"/>
-            <TextBlock x:Name="StatusLabel" Margin="8,0,0,0">Ready</TextBlock>
-        </StackPanel>
-
-        <Border Grid.Row="4" Margin="12" Background="#0f1113" CornerRadius="6" Padding="10">
-            <TextBlock TextWrapping="Wrap">Use "Select Region" to choose capture area. Start will run OCR and show translations.</TextBlock>
+                <StackPanel Orientation="Vertical" Spacing="4">
+                    <TextBlock Text="Tessdata path:" Foreground="#8b949e"/>
+                    <TextBlock x:Name="TessdataPathLabel" Text="(resolving...)" Foreground="#9ea7b3" TextWrapping="Wrap" MaxWidth="520"/>
+                </StackPanel>
+                <TextBlock x:Name="StatusLabel" Text="⏹ Hazır" Foreground="#d29922" Margin="0,8,0,0" />
+            </StackPanel>
         </Border>
+
+        <Border Grid.Row="2" Background="#161b22" CornerRadius="8" Margin="12" Padding="12">
+            <StackPanel Orientation="Vertical" Spacing="8">
+                <TextBlock Text="OCR:" Foreground="#8b949e"/>
+                <TextBlock x:Name="OcrTextLabel" Text="-" Foreground="#6e7681" TextWrapping="Wrap"/>
+
+                <TextBlock Text="Çeviri:" Foreground="#8b949e" Margin="0,8,0,0"/>
+                <TextBlock x:Name="TrTextLabel" Text="-" Foreground="#7ee787" FontWeight="Bold" TextWrapping="Wrap"/>
+            </StackPanel>
+        </Border>
+
+        <TextBlock Grid.Row="3" Text="⌨️ F1: Seç • F2: Başlat/Durdur • F3: Çıkış" Foreground="#6e7681" HorizontalAlignment="Center" Margin="0,8,0,8"/>
     </Grid>
 </Window>

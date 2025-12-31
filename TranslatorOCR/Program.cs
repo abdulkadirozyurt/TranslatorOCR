@@ -38,7 +38,7 @@ namespace TranslatorOCR
                     services.AddSingleton<TranslatorOCR.Services.ISettingsService, TranslatorOCR.Infrastructure.Settings.SettingsService>();
 
                     services.AddSingleton<TranslatorOCR.Services.IOcrService, TranslatorOCR.Infrastructure.Ocr.TesseractOcrService>();
-                    services.AddSingleton<TranslatorOCR.Services.ITranslationService, TranslatorOCR.Infrastructure.Translation.MockTranslationService>();
+                    services.AddSingleton<TranslatorOCR.Services.ITranslationService, TranslatorOCR.Infrastructure.Translation.GoogleTranslateService>();
                     services.AddSingleton<TranslatorOCR.Services.IOverlayService, TranslatorOCR.Infrastructure.Overlay.AvaloniaOverlayService>();
                     services.AddSingleton<TranslatorOCR.Application.AppController>();
                 })

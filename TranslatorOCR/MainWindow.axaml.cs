@@ -22,7 +22,6 @@ namespace TranslatorOCR
 
             SelectRegionButton.Click += SelectRegionButton_Click;
             StartStopButton.Click += StartStopButton_Click;
-            BrowseTessdataButton.Click += BrowseTessdataButton_Click;
 
             if (App.Services != null)
             {
@@ -31,8 +30,7 @@ namespace TranslatorOCR
 
                 if (_settings != null)
                 {
-                    TessdataBox.Text = _settings.TessdataPath ?? string.Empty;
-                    // try to set lang combo to settings if available
+                    // set LangCombo based on settings if available
                     if (!string.IsNullOrWhiteSpace(_settings.OcrLanguage))
                     {
                         var items = LangCombo.Items;
@@ -50,22 +48,40 @@ namespace TranslatorOCR
                             }
                         }
                     }
+
+                    // show resolved tessdata path (effective path used by TesseractOcrService)
+                    var resolved = _settings.TessdataPath ?? Environment.GetEnvironmentVariable("TESSDATA_PREFIX") ?? System.IO.Path.Combine(AppContext.BaseDirectory, "tessdata");
+                    TessdataPathLabel.Text = resolved;
                 }
             }
 
-            SaveSettingsButton.Click += SaveSettingsButton_Click;
+            // no tessdata selection in UI anymore
+            // Key bindings: F1=SelectRegion, F2=Start/Stop, F3=Exit
+            this.KeyDown += MainWindow_KeyDown;
         }
 
-        private async void BrowseTessdataButton_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+        private void MainWindow_KeyDown(object? sender, Avalonia.Input.KeyEventArgs e)
         {
-            var dlg = new OpenFolderDialog();
-            var result = await dlg.ShowAsync(this);
-            if (!string.IsNullOrWhiteSpace(result))
+            if (e.Key == Avalonia.Input.Key.F1)
             {
-                TessdataBox.Text = result;
-                StatusLabel.Text = "Selected tessdata folder";
+                SelectRegionButton_Click(this, null);
+                e.Handled = true;
+            }
+            else if (e.Key == Avalonia.Input.Key.F2)
+            {
+                StartStopButton_Click(this, null);
+                e.Handled = true;
+            }
+            else if (e.Key == Avalonia.Input.Key.F3)
+            {
+                // exit application
+                var lifetime = (App.Current.ApplicationLifetime as Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime);
+                lifetime?.Shutdown();
+                e.Handled = true;
             }
         }
+
+        // tessdata selection removed — tessdata is loaded from AppContext.BaseDirectory/tessdata or TESSDATA_PREFIX
 
         private void SelectRegionButton_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
         {
@@ -137,41 +153,6 @@ namespace TranslatorOCR
             }
         }
 
-        private void SaveSettingsButton_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
-        {
-            if (_settings == null) return;
-            var path = TessdataBox.Text?.Trim();
-            if (!string.IsNullOrWhiteSpace(path) && !System.IO.Directory.Exists(path))
-            {
-                StatusLabel.Text = "Tessdata path does not exist";
-                return;
-            }
-
-            // Save OCR language setting from LangCombo selection (this represents OCR language configuration)
-            var langItem = LangCombo.SelectedItem as ComboBoxItem;
-            var lang = langItem?.Content?.ToString();
-            if (!string.IsNullOrWhiteSpace(lang))
-            {
-                // map UI language short codes to tessdata traineddata names when necessary
-                var trained = lang switch
-                {
-                    "en" => "eng",
-                    "tr" => "tur",
-                    _ => lang
-                };
-
-                if (!string.IsNullOrWhiteSpace(path) && !System.IO.File.Exists(System.IO.Path.Combine(path, trained + ".traineddata")))
-                {
-                    StatusLabel.Text = $"Missing traineddata: {trained}.traineddata";
-                    return;
-                }
-
-                _settings.OcrLanguage = lang;
-            }
-
-            _settings.TessdataPath = path;
-            _settings.Save();
-            StatusLabel.Text = "Settings saved";
-        }
+        // settings saved via settings service elsewhere; tessdata path is not user-editable in UI
     }
 }

@@ -22,6 +22,7 @@ namespace TranslatorOCR.Infrastructure.Overlay
         private bool _dragging;
         private PixelPoint _dragStartPointer;
         private PixelPoint _windowStart;
+        private bool _wasVisibleBeforeTempHide;
 
         public Task HideAsync(CancellationToken cancellationToken)
         {
@@ -47,6 +48,33 @@ namespace TranslatorOCR.Infrastructure.Overlay
 
                 UpdateSizeAndPosition();
                 _window?.Show();
+            });
+
+            return Task.CompletedTask;
+        }
+
+        public Task TempHideAsync(CancellationToken cancellationToken)
+        {
+            if (_window == null) return Task.CompletedTask;
+
+            Dispatcher.UIThread.Post(() =>
+            {
+                _wasVisibleBeforeTempHide = _window.IsVisible;
+                if (_wasVisibleBeforeTempHide)
+                    _window.Hide();
+            });
+
+            return Task.CompletedTask;
+        }
+
+        public Task TempShowAsync(CancellationToken cancellationToken)
+        {
+            if (_window == null) return Task.CompletedTask;
+
+            Dispatcher.UIThread.Post(() =>
+            {
+                if (_wasVisibleBeforeTempHide && _window != null)
+                    _window.Show();
             });
 
             return Task.CompletedTask;

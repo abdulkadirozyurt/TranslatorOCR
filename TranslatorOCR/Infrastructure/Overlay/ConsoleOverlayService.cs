@@ -22,4 +22,16 @@ public class ConsoleOverlayService : IOverlayService
         Console.WriteLine($"[Overlay] {text}");
         return Task.CompletedTask;
     }
+
+    public Task TempHideAsync(CancellationToken cancellationToken)
+    {
+        // no-op for console overlay
+        return Task.CompletedTask;
+    }
+
+    public Task TempShowAsync(CancellationToken cancellationToken)
+    {
+        // no-op for console overlay
+        return Task.CompletedTask;
+    }
 }
