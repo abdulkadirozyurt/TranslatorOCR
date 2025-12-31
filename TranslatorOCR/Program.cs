@@ -17,7 +17,26 @@ namespace TranslatorOCR
                 .ConfigureServices((context, services) =>
                 {
                     // Register default implementations (can be overridden later)
-                    services.AddSingleton<TranslatorOCR.Services.IScreenCaptureService, TranslatorOCR.Infrastructure.ScreenCapture.ScreenCaptureService>();
+                    if (System.OperatingSystem.IsWindows())
+                    {
+                        services.AddSingleton<TranslatorOCR.Services.IScreenCaptureService, TranslatorOCR.Infrastructure.ScreenCapture.WindowsScreenCaptureService>();
+                    }
+                    else if (System.OperatingSystem.IsMacOS())
+                    {
+                        services.AddSingleton<TranslatorOCR.Services.IScreenCaptureService, TranslatorOCR.Infrastructure.ScreenCapture.MacScreenCaptureService>();
+                    }
+                    else if (System.OperatingSystem.IsLinux())
+                    {
+                        services.AddSingleton<TranslatorOCR.Services.IScreenCaptureService, TranslatorOCR.Infrastructure.ScreenCapture.LinuxScreenCaptureService>();
+                    }
+                    else
+                    {
+                        services.AddSingleton<TranslatorOCR.Services.IScreenCaptureService, TranslatorOCR.Infrastructure.ScreenCapture.ScreenCaptureService>();
+                    }
+
+                    // Settings service (load from AppData)
+                    services.AddSingleton<TranslatorOCR.Services.ISettingsService, TranslatorOCR.Infrastructure.Settings.SettingsService>();
+
                     services.AddSingleton<TranslatorOCR.Services.IOcrService, TranslatorOCR.Infrastructure.Ocr.TesseractOcrService>();
                     services.AddSingleton<TranslatorOCR.Services.ITranslationService, TranslatorOCR.Infrastructure.Translation.MockTranslationService>();
                     services.AddSingleton<TranslatorOCR.Services.IOverlayService, TranslatorOCR.Infrastructure.Overlay.AvaloniaOverlayService>();

@@ -5,5 +5,41 @@
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="TranslatorOCR.MainWindow"
         Title="TranslatorOCR">
-    Welcome to Avalonia!
+    <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,*" ColumnDefinitions="Auto,*">
+        <TextBlock Grid.ColumnSpan="2" Margin="12" FontSize="18" Text="TranslatorOCR - Game Subtitle Translator"/>
+
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="12" Spacing="8">
+            <Button x:Name="SelectRegionButton" Content="Select Region" Width="120"/>
+            <Button x:Name="StartStopButton" Content="Start" Width="100"/>
+            <TextBlock VerticalAlignment="Center" Margin="8,0,0,0">Interval (s):</TextBlock>
+            <TextBox x:Name="IntervalBox" Width="60" Text="0.5"/>
+            <TextBlock VerticalAlignment="Center" Margin="8,0,0,0">Lang:</TextBlock>
+            <ComboBox x:Name="LangCombo" Width="80" SelectedIndex="0">
+                <ComboBoxItem Content="en"/>
+                <ComboBoxItem Content="tr"/>
+            </ComboBox>
+        </StackPanel>
+
+        <!-- Tessdata settings -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="12" Spacing="8">
+            <TextBlock VerticalAlignment="Center">Tessdata:</TextBlock>
+            <TextBox x:Name="TessdataBox" Width="340"/>
+            <Button x:Name="BrowseTessdataButton" Content="Browse" Width="80"/>
+            <Button x:Name="SaveSettingsButton" Content="Save" Width="80"/>
+        </StackPanel>
+
+        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="12">
+            <TextBlock Text="Region:" FontWeight="Bold"/>
+            <TextBlock x:Name="RegionLabel" Margin="8,0,0,0">Not selected</TextBlock>
+        </StackPanel>
+
+        <StackPanel Grid.Row="3" Orientation="Horizontal" Margin="12">
+            <TextBlock Text="Status:" FontWeight="Bold"/>
+            <TextBlock x:Name="StatusLabel" Margin="8,0,0,0">Ready</TextBlock>
+        </StackPanel>
+
+        <Border Grid.Row="4" Margin="12" Background="#0f1113" CornerRadius="6" Padding="10">
+            <TextBlock TextWrapping="Wrap">Use "Select Region" to choose capture area. Start will run OCR and show translations.</TextBlock>
+        </Border>
+    </Grid>
 </Window>
